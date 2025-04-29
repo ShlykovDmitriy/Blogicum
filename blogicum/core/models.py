@@ -2,14 +2,37 @@ from django.db import models
 
 
 class IsPublishedAndCreatedAt(models.Model):
-    is_published = models.BooleanField(default=True, verbose_name='Опубликовано', help_text='Снимите галочку, что бы скрыть публикацию.')
-    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Добавлено')
+    """Абстрактная модель с базовыми полями публикации и даты создания.
+
+    Attributes:
+        is_published (BooleanField): Флаг публикации. По умолчанию True.
+        created_at (DateTimeField): Дата создания. Заполняется автоматически.
+    """
+
+    is_published = models.BooleanField(
+        default=True,
+        verbose_name='Опубликовано',
+        help_text='Снимите галочку, что бы скрыть публикацию.'
+    )
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name='Добавлено'
+    )
 
     class Meta:
         abstract = True
 
 
 class Title(models.Model):
+    """Абстрактная модель с заголовком.
+
+    Attributes:
+        title (CharField): Заголовок. Максимальная длина - 256 символов.
+
+    Methods:
+        __str__: Возвращает заголовок в виде строки.
+    """
+
     title = models.CharField(max_length=256, verbose_name='Заголовок')
 
     class Meta:
