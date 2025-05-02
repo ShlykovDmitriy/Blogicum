@@ -1,6 +1,7 @@
 from django.contrib.auth import get_user_model
 from django.db import models
 
+from blog.managers import PublishedPostManager
 from core.models import Title, IsPublishedAndCreatedAt
 
 
@@ -107,6 +108,9 @@ class Post(Title, IsPublishedAndCreatedAt):
         related_name='posts',
         verbose_name='Категория'
     )
+    objects = models.Manager()
+    published = PublishedPostManager()
+
 
     class Meta:
         verbose_name = 'публикация'
