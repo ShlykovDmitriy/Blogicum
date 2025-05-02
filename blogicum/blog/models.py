@@ -82,9 +82,9 @@ class Post(Title, IsPublishedAndCreatedAt):
 
     text = models.TextField(verbose_name='Текст')
     pub_date = models.DateTimeField(
-        verbose_name='Дава и время публикации',
-        help_text=('Если установить дату и время в будущем '
-                   '- можно делать отложенные публикации.')
+        verbose_name='Дата и время публикации',
+        help_text=('Если установить дату и время в будущем — можно '
+                   'делать отложенные публикации.')
     )
     author = models.ForeignKey(
         User,
@@ -111,3 +111,4 @@ class Post(Title, IsPublishedAndCreatedAt):
     class Meta:
         verbose_name = 'публикация'
         verbose_name_plural = 'Публикации'
+        ordering = ('-pub_date',)
