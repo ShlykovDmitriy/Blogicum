@@ -2,9 +2,8 @@ from django.contrib.auth import get_user_model
 from django.db import models
 
 from blog.managers import PublishedPostManager
-from core.models import Title, IsPublishedAndCreatedAt
 from core.constants import MAX_LEN_TITLE_NAME
-
+from core.models import IsPublishedAndCreatedAt, Title
 
 User = get_user_model()
 
