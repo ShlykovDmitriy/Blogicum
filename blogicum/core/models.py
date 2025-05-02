@@ -1,5 +1,7 @@
 from django.db import models
 
+from core.constants import MAX_LEN_TITLE_NAME
+
 
 class IsPublishedAndCreatedAt(models.Model):
     """Абстрактная модель с базовыми полями публикации и даты создания.
@@ -33,7 +35,10 @@ class Title(models.Model):
         __str__: Возвращает заголовок в виде строки.
     """
 
-    title = models.CharField(max_length=256, verbose_name='Заголовок')
+    title = models.CharField(
+        max_length=MAX_LEN_TITLE_NAME,
+        verbose_name='Заголовок'
+    )
 
     class Meta:
         abstract = True

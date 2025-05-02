@@ -3,6 +3,7 @@ from django.db import models
 
 from blog.managers import PublishedPostManager
 from core.models import Title, IsPublishedAndCreatedAt
+from core.constants import MAX_LEN_TITLE_NAME
 
 
 User = get_user_model()
@@ -46,7 +47,7 @@ class Location(IsPublishedAndCreatedAt):
     """
 
     name = models.CharField(
-        max_length=256,
+        max_length=MAX_LEN_TITLE_NAME,
         verbose_name='Название места',
         help_text='Максимальная длинна 256 символов.'
     )
@@ -69,6 +70,15 @@ class Post(Title, IsPublishedAndCreatedAt):
         author (ForeignKey): Ссылка на автора публикации.
         location (ForeignKey): Местоположение, опционально.
         category (ForeignKey): Категория, обязательно.
+
+    Managers:
+        objects (Manager): Стандартный менеджер Django.
+        published (PublishedPostManager): Кастомный менеджер для получения
+            только опубликованных постов. Фильтрует посты по условиям:
+            - is_published=True
+            - category__is_published=True
+            - pub_date__lte=current_time
+            Оптимизирует запросы через select_related и only.
 
     Inherits:
         Title: Абстрактная модель с заголовком.
@@ -110,7 +120,6 @@ class Post(Title, IsPublishedAndCreatedAt):
     )
     objects = models.Manager()
     published = PublishedPostManager()
-
 
     class Meta:
         verbose_name = 'публикация'
