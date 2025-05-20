@@ -1,11 +1,13 @@
 from django.shortcuts import get_object_or_404, render
 from django.http import HttpRequest, HttpResponse
+from django.views.generic import ListView, DetailView, CreateView, DeleteView, UpdateView
 
-from blog.models import Post, Category
-from core.constants import POSTS_IN_INDEX
+from blog.forms import PostForm
+from blog.models import Post, Category, User
+from core.constants import POSTS_IN_PAGE
 
 
-def index(request: HttpRequest) -> HttpResponse:
+'''def index(request: HttpRequest) -> HttpResponse:
     """Возвращает главную страницу с 5 последними опубликованными постами.
 
     Использует кастомный менеджер PublishedPostManager для оптимизированного
@@ -23,7 +25,7 @@ def index(request: HttpRequest) -> HttpResponse:
     return render(request, 'blog/index.html', context)
 
 
-def post_detail(request: HttpRequest, id: int) -> HttpResponse:
+    def post_detail(request: HttpRequest, id: int) -> HttpResponse:
     """Отображает детальную страницу поста по его ID.
 
     Проверяет, что пост:
@@ -48,7 +50,7 @@ def post_detail(request: HttpRequest, id: int) -> HttpResponse:
         pk=id
     )
     context = {'post': post}
-    return render(request, 'blog/detail.html', context)
+    return render(request, 'blog/detail.html', context)'''
 
 
 def category_posts(request: HttpRequest, category_slug: str) -> HttpResponse:
@@ -81,3 +83,34 @@ def category_posts(request: HttpRequest, category_slug: str) -> HttpResponse:
     context = {'post_list': post_list,
                'category': category}
     return render(request, 'blog/category.html', context)
+
+
+
+class PostListView(ListView):
+    pass
+
+
+class PostCreateView(CreateView):
+    pass
+
+
+class PostDetailView(DetailView):
+    pass
+
+
+class UserPostListView(ListView):
+    model = Post
+    template_name = 'blog/profile.html'
+    paginate_by = 10
+
+    def get_queryset(self):
+        return Post.published.filter(author__username=self.kwargs['username'])
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        posts = list(context["object_list"])
+        if posts:
+            context["profile"] = posts[0].author
+        return context
+    
+

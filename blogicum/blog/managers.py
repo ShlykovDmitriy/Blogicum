@@ -11,17 +11,14 @@ class PublishedPostManager(models.Manager):
     - с опубликованной категорией (category__is_published=True)
     - с датой публикации не в будущем (pub_date__lte=now)
     """
-
     def get_queryset(self) -> QuerySet:
-        return super().get_queryset().select_related(
-            'author', 'category', 'location'
-        ).filter(
-            is_published=True,
-            category__is_published=True,
-            pub_date__lte=timezone.now()
-        ).only(
-            'title', 'text', 'pub_date',
-            'author__username',
-            'location__name', 'location__is_published',
-            'category__title', 'category__slug', 'category__slug'
+        return (
+            super().get_queryset()
+            .select_related('author', 'category', 'location')
+            .filter(
+                is_published=True,
+                category__is_published=True,
+                pub_date__lte=timezone.now()
+            )
+            .order_by('-pub_date')
         )
