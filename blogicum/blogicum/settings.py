@@ -25,7 +25,10 @@ SECRET_KEY = 'django-insecure-es45zm3ktok-m!!fk%&bf&t5@avcr^7bp@q5@j$%mm18f_$_f=
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    'localhost',
+    '127.0.0.1',
+]
 
 
 # Application definition
@@ -40,6 +43,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'debug_toolbar',
+    'django_bootstrap5',
 ]
 
 MIDDLEWARE = [
@@ -137,3 +141,5 @@ STATICFILES_DIRS = [
 INTERNAL_IPS = [
     '127.0.0.1',
 ]
+
+CSRF_FAILURE_VIEW = 'pages.views.csrf_failure_view'
