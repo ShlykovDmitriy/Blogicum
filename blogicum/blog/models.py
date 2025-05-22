@@ -1,5 +1,6 @@
 from django.contrib.auth import get_user_model
 from django.db import models
+from django.urls import reverse
 
 from blog.managers import PublishedPostManager
 from core.constants import MAX_LEN_TITLE_NAME
@@ -124,3 +125,7 @@ class Post(Title, IsPublishedAndCreatedAt):
         verbose_name = 'публикация'
         verbose_name_plural = 'Публикации'
         ordering = ('-pub_date',)
+
+    def get_absolute_url(self):
+        return reverse('blog:profile', kwargs={'username': self.author.username})
+    

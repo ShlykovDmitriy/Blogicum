@@ -8,6 +8,7 @@ handler500 = 'pages.views.server_error_view'
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('auth/', include('users.urls')),
     path('pages/', include('pages.urls')),
     path('', include('blog.urls')),
 ]

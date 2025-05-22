@@ -48,4 +48,5 @@ def csrf_failure_view(
     Returns:
         HttpResponse: Рендер шаблона 403csrf.html с HTTP-статусом 403.
     """
-    return render(request, 'pages/403csrf.html', status=403)
+    context = {'reason': reason} if reason else {}
+    return render(request, 'pages/403csrf.html', context, status=403)
