@@ -5,6 +5,7 @@ from django.utils import timezone
 from django.views.generic import ListView, DetailView, CreateView, DeleteView, UpdateView
 
 from blog.forms import PostForm
+from comments.forms import CommentForm
 from blog.models import Post
 from core.constants import POSTS_IN_PAGE
 
@@ -31,12 +32,14 @@ class PostCreateView(CreateView):
 class PostDeleteView(DeleteView):
     model = Post
     template_name = 'blog/create.html'
+    pk_url_kwarg = 'post_id'
 
 
 class PostUpdateView(UpdateView):
     model = Post
     template_name = 'blog/create.html'
     form_class = PostForm
+    pk_url_kwarg = 'post_id'
 
     def form_valid(self, form):
         form.instance.author = self.request.user
@@ -48,6 +51,13 @@ class PostUpdateView(UpdateView):
 class PostDetailView(DetailView):
     model = Post
     template_name = 'blog/detail.html'
+    pk_url_kwarg = 'post_id'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['form'] = CommentForm()
+        context['comments'] = self.object.comments.select_related('author')
+        return context
 
 
 class CategoryPostListView(ListView):
@@ -80,5 +90,3 @@ class UserPostListView(ListView):
         if posts:
             context['profile'] = posts[0].author
         return context
-    
-

@@ -33,6 +33,9 @@ class Category(Title, IsPublishedAndCreatedAt):
     class Meta:
         verbose_name = 'категория'
         verbose_name_plural = 'Категории'
+    
+    def __str__(self):
+        return self.title
 
 
 class Location(IsPublishedAndCreatedAt):
@@ -117,6 +120,11 @@ class Post(Title, IsPublishedAndCreatedAt):
         null=True,
         related_name='posts',
         verbose_name='Категория'
+    )
+    image = models.ImageField(
+        'Изображение',
+        blank=True,
+        upload_to='post_images'
     )
     objects = models.Manager()
     published = PublishedPostManager()
