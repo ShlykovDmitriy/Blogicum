@@ -1,43 +1,86 @@
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import CreateView, DeleteView, UpdateView
-from django.shortcuts import get_object_or_404
-from django.urls import reverse_lazy, reverse
 
-from blog.models import Post
-from comments.models import Comment
-from comments.forms import CommentForm
+from comments.mixins import (AuthorRequiredMixin, BaseCommentMixin,
+                             CommentFormMixin)
 
 
-class BaseCommentMixin:
-    """Базовый миксин для всех операций с комментариями"""
-    model = Comment
-    template_name = 'blog/comment.html'
-    pk_url_kwarg = 'comment_id'
+class CommentCreateView(LoginRequiredMixin,
+                        BaseCommentMixin,
+                        CommentFormMixin,
+                        CreateView):
+    """Представление для создания нового комментария.
 
-    def dispatch(self, request, *args, **kwargs):
-        """Получаем пост и сохраняем его в атрибуте"""
-        self.current_post = get_object_or_404(Post, pk=kwargs['post_id'])
-        return super().dispatch(request, *args, **kwargs)
+    Наследует функциональность:
+    - LoginRequiredMixin: Требует аутентификации пользователя
+    - BaseCommentMixin: Базовые настройки работы с комментариями
+    - CommentFormMixin: Обработка формы комментария
+    - CreateView: Стандартная логика создания объекта
 
-    def get_success_url(self):
-        """URL для редиректа после успешного действия"""
-        return reverse('blog:post_detail', kwargs={'post_id': self.current_post.pk})
+    Attributes:
+        template_name (str):
+            Унаследован от BaseCommentMixin ('blog/comment.html')
+        form_class (CommentForm): Унаследован от CommentFormMixin
+        model (Comment): Унаследован от BaseCommentMixin
 
+    Methods:
+        form_valid:
+            Автоматически вызывается при валидной форме
+            (обрабатывается в CommentFormMixin)
+    """
 
-class CommentFormMixin:
-    """Миксин для операций, связанных с формами"""
-    form_class = CommentForm
-
-    def form_valid(self, form):
-        """Устанавливаем автора и пост перед сохранением"""
-        form.instance.post = self.current_post
-        form.instance.author = self.request.user
-        return super().form_valid(form)
-
-class CommentCreateView(BaseCommentMixin, CommentFormMixin, CreateView):
     pass
 
-class CommentUpdateView(BaseCommentMixin, CommentFormMixin, UpdateView):
+
+class CommentUpdateView(AuthorRequiredMixin,
+                        BaseCommentMixin,
+                        CommentFormMixin,
+                        UpdateView):
+    """Представление для редактирования существующего комментария.
+
+    Наследует функциональность:
+    - AuthorRequiredMixin: Проверка авторства комментария
+    - BaseCommentMixin: Базовые настройки работы с комментариями
+    - CommentFormMixin: Обработка формы комментария
+    - UpdateView: Стандартная логика обновления объекта
+
+    Attributes:
+        template_name (str):
+            Унаследован от BaseCommentMixin ('blog/comment.html')
+        form_class (CommentForm): Унаследован от CommentFormMixin
+        model (Comment): Унаследован от BaseCommentMixin
+        pk_url_kwarg (str): Унаследован от BaseCommentMixin ('comment_id')
+
+    Methods:
+        dispatch:
+            Проверка прав доступа (обрабатывается в AuthorRequiredMixin)
+        form_valid:
+            Автоматически вызывается при валидной форме
+            (обрабатывается в CommentFormMixin)
+    """
+
     pass
 
-class CommentDeliteView(BaseCommentMixin, DeleteView):
+
+class CommentDeliteView(AuthorRequiredMixin, BaseCommentMixin, DeleteView):
+    """Представление для удаления комментария.
+
+    Наследует функциональность:
+    - AuthorRequiredMixin: Проверка авторства комментария
+    - BaseCommentMixin: Базовые настройки работы с комментариями
+    - DeleteView: Стандартная логика удаления объекта
+
+    Attributes:
+        template_name (str):
+            Унаследован от BaseCommentMixin ('blog/comment.html')
+        model (Comment): Унаследован от BaseCommentMixin
+        pk_url_kwarg (str): Унаследован от BaseCommentMixin ('comment_id')
+
+    Methods:
+        dispatch:
+            Проверка прав доступа (обрабатывается в AuthorRequiredMixin)
+        get_success_url:
+            Перенаправление после удаления (обрабатывается в BaseCommentMixin)
+    """
+
     pass
