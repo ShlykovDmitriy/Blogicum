@@ -33,7 +33,7 @@ class Category(Title, IsPublishedAndCreatedAt):
     class Meta:
         verbose_name = 'категория'
         verbose_name_plural = 'Категории'
-    
+
     def __str__(self):
         return self.title
 
@@ -134,6 +134,11 @@ class Post(Title, IsPublishedAndCreatedAt):
         verbose_name_plural = 'Публикации'
         ordering = ('-pub_date',)
 
-    def get_absolute_url(self):
-        return reverse('blog:profile', kwargs={'username': self.author.username})
-    
+    def get_absolute_url(self) -> str:
+        """Генерирует URL для просмотра профиля автора публикации.
+
+        Returns:
+            str: URL страницы профиля автора.
+        """
+        return reverse(
+            'blog:profile', kwargs={'username': self.author.username})

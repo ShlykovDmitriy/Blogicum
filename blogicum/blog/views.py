@@ -1,92 +1,183 @@
-from django.shortcuts import get_object_or_404, render
-from django.http import HttpRequest, HttpResponse
+from typing import Optional
+
+from django.contrib.auth import get_user_model
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.db.models import Count, QuerySet
+from django.shortcuts import get_object_or_404
 from django.urls import reverse_lazy
-from django.utils import timezone
-from django.views.generic import ListView, DetailView, CreateView, DeleteView, UpdateView
+from django.views.generic import (CreateView, DeleteView, DetailView, ListView,
+                                  UpdateView)
 
-from blog.forms import PostForm
+from blog.mixins import PostAuthorRequiredMixin, PostFormMixin, PostMixin
+from blog.models import Category, Post
 from comments.forms import CommentForm
-from blog.models import Post
-from core.constants import POSTS_IN_PAGE
+
+User = get_user_model()
 
 
+class PostListView(PostMixin, ListView):
+    """Представление для отображения списка опубликованных постов.
 
-class PostListView(ListView):
-    model = Post
+    Attributes:
+        queryset (QuerySet[Post]): QuerySet опубликованных постов.
+        template_name (str): Путь к шаблону страницы.
+    """
+
     queryset = Post.published.all()
     template_name = 'blog/index.html'
-    paginate_by = POSTS_IN_PAGE
 
 
-class PostCreateView(CreateView):
+class CategoryPostListView(PostMixin, ListView):
+    """Представление для отображения постов конкретной категории.
+
+    Attributes:
+        template_name (str): Путь к шаблону страницы.
+    """
+
+    template_name = 'blog/category.html'
+
+    def get_queryset(self) -> QuerySet[Post]:
+        """Получает QuerySet постов для указанной категории.
+
+        Returns:
+            QuerySet[Post]: Посты указанной опубликованной категории.
+
+        Raises:
+            Http404: Если категория не найдена или не опубликована.
+        """
+        self.category = get_object_or_404(
+            Category,
+            slug=self.kwargs['category_slug'],
+            is_published=True
+        )
+        return Post.published.filter(category=self.category)
+
+    def get_context_data(self, **kwargs):
+        """Добавляет категорию в контекст шаблона.
+
+        Returns:
+            Dict[str, Any]: Контекст данных для шаблона.
+        """
+        context = super().get_context_data(**kwargs)
+        context['category'] = self.category
+        return context
+
+
+class UserPostListView(PostMixin, ListView):
+    """Представление для отображения постов конкретного пользователя.
+
+    Attributes:
+        template_name (str): Путь к шаблону страницы.
+    """
+
+    template_name = 'blog/profile.html'
+
+    def get_queryset(self) -> QuerySet[Post]:
+        """Получает QuerySet постов пользователя.
+
+        Для автора возвращает все посты с дополнительными аннотациями.
+        Для других пользователей - только опубликованные посты.
+
+        Returns:
+            QuerySet[Post]: Посты указанного пользователя.
+        """
+        self.profile_user = get_object_or_404(
+            User,
+            username=self.kwargs['username']
+        )
+        if self.profile_user == self.request.user:
+            return Post.objects.select_related(
+                'author', 'category', 'location'
+            ).filter(
+                author=self.profile_user
+            ).annotate(
+                comment_count=Count('comments')
+            ).order_by('-pub_date')
+        return Post.published.filter(author=self.profile_user)
+
+    def get_context_data(self, **kwargs):
+        """Добавляет профиль пользователя в контекст шаблона.
+
+        Returns:
+            Dict[str, Any]: Контекст данных для шаблона.
+        """
+        context = super().get_context_data(**kwargs)
+        context['profile'] = self.profile_user
+        return context
+
+
+class PostCreateView(LoginRequiredMixin, PostFormMixin, CreateView):
+    """Представление для создания нового поста.
+
+    Attributes:
+        template_name (str): Путь к шаблону формы.
+    """
+
+    template_name = 'blog/create.html'
+
+
+class PostDeleteView(PostAuthorRequiredMixin, DeleteView):
+    """Представление для удаления поста (только для автора).
+
+    Attributes:
+        model (Type[Post]): Модель Post.
+        template_name (str): Путь к шаблону подтверждения.
+        success_url (str): URL для перенаправления после удаления.
+    """
+
     model = Post
     template_name = 'blog/create.html'
-    form_class = PostForm
+    success_url = reverse_lazy('blog:index')
 
-    def form_valid(self, form):
-        form.instance.author = self.request.user
-        if not form.instance.pub_date:
-            form.instance.pub_date = timezone.now()
-        return super().form_valid(form)
 
-class PostDeleteView(DeleteView):
-    model = Post
+class PostUpdateView(PostAuthorRequiredMixin, PostFormMixin, UpdateView):
+    """Представление для редактирования поста (только для автора).
+
+    Attributes:
+        template_name (str): Путь к шаблону формы.
+    """
+
     template_name = 'blog/create.html'
-    pk_url_kwarg = 'post_id'
-
-
-class PostUpdateView(UpdateView):
-    model = Post
-    template_name = 'blog/create.html'
-    form_class = PostForm
-    pk_url_kwarg = 'post_id'
-
-    def form_valid(self, form):
-        form.instance.author = self.request.user
-        if not form.instance.pub_date:
-            form.instance.pub_date = timezone.now()
-        return super().form_valid(form)
 
 
 class PostDetailView(DetailView):
+    """Представление для просмотра деталей поста.
+
+    Attributes:
+        model (Type[Post]): Модель Post.
+        template_name (str): Путь к шаблону страницы.
+        pk_url_kwarg (str): Имя параметра URL с ID поста.
+    """
+
     model = Post
     template_name = 'blog/detail.html'
     pk_url_kwarg = 'post_id'
 
+    def get_object(self, queryset: Optional[QuerySet[Post]] = None) -> Post:
+        """Получает объект поста с проверкой прав доступа.
+
+        Args:
+            queryset: Базовый QuerySet (не используется явно).
+
+        Returns:
+            Post: Запрошенный пост.
+
+        Raises:
+            Http404: Если пост не найден или недоступен текущему пользователю.
+        """
+        post = get_object_or_404(Post, pk=self.kwargs['post_id'])
+        if post.author == self.request.user:
+            return post
+        return get_object_or_404(
+            Post.published.all(), pk=self.kwargs['post_id'])
+
     def get_context_data(self, **kwargs):
+        """Добавляет форму комментария и список комментариев в контекст.
+
+        Returns:
+            Dict[str, Any]: Контекст данных для шаблона.
+        """
         context = super().get_context_data(**kwargs)
         context['form'] = CommentForm()
         context['comments'] = self.object.comments.select_related('author')
-        return context
-
-
-class CategoryPostListView(ListView):
-    model = Post
-    template_name = 'blog/category.html'
-    paginate_by = POSTS_IN_PAGE
-
-    def get_queryset(self):
-        return Post.published.filter(category__slug=self.kwargs['category_slug'])
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        posts = list(context['object_list'])
-        if posts:
-            context['category'] = posts[0].category
-        return context
-
-
-class UserPostListView(ListView):
-    model = Post
-    template_name = 'blog/profile.html'
-    paginate_by = POSTS_IN_PAGE
-
-    def get_queryset(self):
-        return Post.published.filter(author__username=self.kwargs['username'])
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        posts = list(context['object_list'])
-        if posts:
-            context['profile'] = posts[0].author
         return context
