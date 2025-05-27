@@ -1,7 +1,6 @@
-from django.urls import path, include
+from django.urls import include, path
 
 from users.views import UserCreateView, UserUpdateView
-
 
 app_name = 'users'
 
