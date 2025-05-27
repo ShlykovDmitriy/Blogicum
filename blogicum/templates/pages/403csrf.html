@@ -2,13 +2,5 @@
 {% block title %}Ошибка CSRF токена{% endblock %}
 {% block content %}
   <h1>Ошибка CSRF токена. 403</h1>
-  {% if reason %}
-    {% if reason == "CSRF token missing" %}
-      <p>Попробуйте перезагрузить страницу.</p>
-      <a href="{% url 'blog:index' %}">Вернуться на главную</a>
-    {% else %}
-      <p>Неверный токен.</p>
-      <a href="{% url 'blog:index' %}">Вернуться на главную</a>
-    {% endif %}
-  {% endif %}
+  <a href="{% url 'blog:index' %}">Вернуться на главную</a>
 {% endblock %}

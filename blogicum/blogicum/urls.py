@@ -6,6 +6,7 @@ from django.urls import path, include
 
 handler404 = 'pages.views.page_not_found_view'
 handler500 = 'pages.views.server_error_view'
+handler403 = 'pages.views.permission_denied'
 
 urlpatterns = [
     path('admin/', admin.site.urls),
