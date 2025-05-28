@@ -2,7 +2,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import CreateView, DeleteView, UpdateView
 
 from comments.mixins import BaseCommentMixin, CommentFormMixin
-from core.mixins import AuthorRequiredMixin
+from core.mixins import AuthorRequiredMixin, CachedObjectMixin
 
 
 class CommentCreateView(LoginRequiredMixin,
@@ -33,6 +33,7 @@ class CommentCreateView(LoginRequiredMixin,
 
 
 class CommentUpdateView(AuthorRequiredMixin,
+                        CachedObjectMixin,
                         BaseCommentMixin,
                         CommentFormMixin,
                         UpdateView):
@@ -40,6 +41,7 @@ class CommentUpdateView(AuthorRequiredMixin,
 
     Наследует функциональность:
     - AuthorRequiredMixin: Проверка авторства комментария
+    - CachedObjectMixin: Кеширует обьект в рамках запроса
     - BaseCommentMixin: Базовые настройки работы с комментариями
     - CommentFormMixin: Обработка формы комментария
     - UpdateView: Стандартная логика обновления объекта
@@ -62,11 +64,15 @@ class CommentUpdateView(AuthorRequiredMixin,
     pass
 
 
-class CommentDeliteView(AuthorRequiredMixin, BaseCommentMixin, DeleteView):
+class CommentDeliteView(AuthorRequiredMixin,
+                        CachedObjectMixin,
+                        BaseCommentMixin,
+                        DeleteView):
     """Представление для удаления комментария.
 
     Наследует функциональность:
     - AuthorRequiredMixin: Проверка авторства комментария
+    - CachedObjectMixin: Кеширует обьект в рамках запроса
     - BaseCommentMixin: Базовые настройки работы с комментариями
     - DeleteView: Стандартная логика удаления объекта
 

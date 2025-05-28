@@ -44,7 +44,7 @@ class AuthorRequiredMixin(LoginRequiredMixin):
         """
         return getattr(obj, self.author_field)
 
-    def check_author(self, request, obj) -> bool:
+    def check_author_or_admin(self, request, obj) -> bool:
         """Проверяет, является ли пользователь автором объекта.
 
         Args:
@@ -54,7 +54,7 @@ class AuthorRequiredMixin(LoginRequiredMixin):
         Returns:
             bool: True если пользователь является автором, иначе False.
         """
-        return self.get_author(obj) == request.user
+        return self.get_author(obj) == request.user or request.user.is_staff
 
     def dispatch(self, request, *args, **kwargs):
         """Обрабатывает запрос:
@@ -71,7 +71,7 @@ class AuthorRequiredMixin(LoginRequiredMixin):
             HttpResponse: Результат обработки запроса.
         """
         obj = getattr(self, 'object', None) or self.get_object()
-        if (not self.check_author(request, obj)
+        if (not self.check_author_or_admin(request, obj)
            or not request.user.is_authenticated):
             return redirect(self.get_redirect_url())
         return super().dispatch(request, *args, **kwargs)

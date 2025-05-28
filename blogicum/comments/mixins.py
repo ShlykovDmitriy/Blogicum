@@ -21,6 +21,7 @@ class BaseCommentMixin:
     """
 
     model = Comment
+    queryset = Comment.objects.select_related('author').all()
     template_name = 'blog/comment.html'
     pk_url_kwarg = 'comment_id'
 
