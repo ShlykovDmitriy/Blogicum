@@ -2,7 +2,7 @@ from django.contrib.auth import get_user_model
 from django.db import models
 from django.urls import reverse
 
-from blog.managers import PublishedPostManager
+from blog.managers import PostManager
 from core.constants import MAX_LEN_TITLE_NAME
 from core.models import IsPublishedAndCreatedAt, Title
 
@@ -127,7 +127,7 @@ class Post(Title, IsPublishedAndCreatedAt):
         upload_to='post_images'
     )
     objects = models.Manager()
-    published = PublishedPostManager()
+    optimized = PostManager()
 
     class Meta:
         verbose_name = 'публикация'

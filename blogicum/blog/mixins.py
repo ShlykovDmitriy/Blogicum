@@ -13,12 +13,14 @@ class PostMixin:
     - Задает количество постов на странице
 
     Attributes:
-        model (Type[Post]): Модель Post для работы представления.
+        model (Post): Модель Post для работы представления.
         paginate_by (int): Количество постов на странице пагинации.
+        queryset: Опубликованные посты
     """
 
     model = Post
     paginate_by = POSTS_IN_PAGE
+    queryset = Post.optimized.visible()
 
 
 class PostDetailDeleteMixin(PostMixin):

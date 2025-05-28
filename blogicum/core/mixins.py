@@ -1,7 +1,11 @@
+from typing import Optional
+
 from django.contrib.auth import get_user_model
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import redirect
 from django.urls import reverse
+from django.db.models import QuerySet
+from django.db import models
 
 User = get_user_model()
 
@@ -66,7 +70,7 @@ class AuthorRequiredMixin(LoginRequiredMixin):
         Returns:
             HttpResponse: Результат обработки запроса.
         """
-        obj = self.get_object()
+        obj = getattr(self, 'object', None) or self.get_object()
         if (not self.check_author(request, obj)
            or not request.user.is_authenticated):
             return redirect(self.get_redirect_url())
@@ -88,3 +92,16 @@ class AuthorRequiredMixin(LoginRequiredMixin):
             self.redirect_url_name,
             kwargs={self.redirect_id_param: object_id}
         )
+
+
+class CachedObjectMixin:
+    """Миксин для кеширования объекта в рамках запроса (опциональный)"""
+
+    def get_object(self, queryset: Optional[QuerySet] = None) -> models.Model:
+        if not hasattr(self, '_object'):
+            self._object = super().get_object(queryset)
+        return self._object
+
+    def dispatch(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        return super().dispatch(request, *args, **kwargs)

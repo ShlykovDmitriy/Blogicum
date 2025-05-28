@@ -2,7 +2,7 @@ from typing import Optional
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.db.models import Count, QuerySet
+from django.db.models import QuerySet
 from django.shortcuts import get_object_or_404
 from django.urls import reverse_lazy
 from django.views.generic import (CreateView, DeleteView, DetailView, ListView,
@@ -11,7 +11,7 @@ from django.views.generic import (CreateView, DeleteView, DetailView, ListView,
 from blog.mixins import PostDetailDeleteMixin, PostFormMixin, PostMixin
 from blog.models import Category, Post
 from comments.forms import CommentForm
-from core.mixins import AuthorRequiredMixin
+from core.mixins import AuthorRequiredMixin, CachedObjectMixin
 
 User = get_user_model()
 
@@ -20,11 +20,9 @@ class PostListView(PostMixin, ListView):
     """Представление для отображения списка опубликованных постов.
 
     Attributes:
-        queryset (QuerySet[Post]): QuerySet опубликованных постов.
         template_name (str): Путь к шаблону страницы.
     """
 
-    queryset = Post.published.all()
     template_name = 'blog/index.html'
 
 
@@ -51,7 +49,7 @@ class CategoryPostListView(PostMixin, ListView):
             slug=self.kwargs['category_slug'],
             is_published=True
         )
-        return Post.published.filter(category=self.category)
+        return Post.optimized.visible().filter(category=self.category)
 
     def get_context_data(self, **kwargs):
         """Добавляет категорию в контекст шаблона.
@@ -87,14 +85,9 @@ class UserPostListView(PostMixin, ListView):
             username=self.kwargs['username']
         )
         if self.profile_user == self.request.user:
-            return Post.objects.select_related(
-                'author', 'category', 'location'
-            ).filter(
-                author=self.profile_user
-            ).annotate(
-                comment_count=Count('comments')
-            ).order_by('-pub_date')
-        return Post.published.filter(author=self.profile_user)
+            return Post.optimized.with_optimization().filter(
+                author=self.profile_user)
+        return Post.optimized.visible().filter(author=self.profile_user)
 
     def get_context_data(self, **kwargs):
         """Добавляет профиль пользователя в контекст шаблона.
@@ -108,16 +101,15 @@ class UserPostListView(PostMixin, ListView):
 
 
 class PostCreateView(LoginRequiredMixin, PostFormMixin, CreateView):
-    """Представление для создания нового поста.
-
-    Attributes:
-        template_name (str): Путь к шаблону формы.
-    """
+    """Представление для создания нового поста."""
 
     pass
 
 
-class PostDeleteView(AuthorRequiredMixin, PostDetailDeleteMixin, DeleteView):
+class PostDeleteView(AuthorRequiredMixin,
+                     CachedObjectMixin,
+                     PostDetailDeleteMixin,
+                     DeleteView):
     """Представление для удаления поста (только для автора).
 
     Attributes:
@@ -129,12 +121,11 @@ class PostDeleteView(AuthorRequiredMixin, PostDetailDeleteMixin, DeleteView):
     success_url = reverse_lazy('blog:index')
 
 
-class PostUpdateView(AuthorRequiredMixin, PostFormMixin, UpdateView):
-    """Представление для редактирования поста (только для автора).
-
-    Attributes:
-        template_name (str): Путь к шаблону формы.
-    """
+class PostUpdateView(AuthorRequiredMixin,
+                     CachedObjectMixin,
+                     PostFormMixin,
+                     UpdateView):
+    """Представление для редактирования поста (только для автора)."""
 
     pass
 
@@ -160,11 +151,12 @@ class PostDetailView(PostDetailDeleteMixin, DetailView):
         Raises:
             Http404: Если пост не найден.
         """
-        post = get_object_or_404(Post, pk=self.kwargs['post_id'])
+        post = get_object_or_404(
+            Post.optimized.with_optimization(), pk=self.kwargs['post_id'])
         if post.author == self.request.user:
             return post
         return get_object_or_404(
-            Post.published.all(), pk=self.kwargs['post_id'])
+            Post.optimized.visible(), pk=self.kwargs['post_id'])
 
     def get_context_data(self, **kwargs):
         """Добавляет форму комментария и список комментариев в контекст.
