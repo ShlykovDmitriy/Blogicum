@@ -8,9 +8,10 @@ from django.urls import reverse_lazy
 from django.views.generic import (CreateView, DeleteView, DetailView, ListView,
                                   UpdateView)
 
-from blog.mixins import PostAuthorRequiredMixin, PostFormMixin, PostMixin
+from blog.mixins import PostDetailDeleteMixin, PostFormMixin, PostMixin
 from blog.models import Category, Post
 from comments.forms import CommentForm
+from core.mixins import AuthorRequiredMixin
 
 User = get_user_model()
 
@@ -113,57 +114,51 @@ class PostCreateView(LoginRequiredMixin, PostFormMixin, CreateView):
         template_name (str): Путь к шаблону формы.
     """
 
-    template_name = 'blog/create.html'
+    pass
 
 
-class PostDeleteView(PostAuthorRequiredMixin, DeleteView):
+class PostDeleteView(AuthorRequiredMixin, PostDetailDeleteMixin, DeleteView):
     """Представление для удаления поста (только для автора).
 
     Attributes:
-        model (Type[Post]): Модель Post.
         template_name (str): Путь к шаблону подтверждения.
         success_url (str): URL для перенаправления после удаления.
     """
 
-    model = Post
     template_name = 'blog/create.html'
     success_url = reverse_lazy('blog:index')
 
 
-class PostUpdateView(PostAuthorRequiredMixin, PostFormMixin, UpdateView):
+class PostUpdateView(AuthorRequiredMixin, PostFormMixin, UpdateView):
     """Представление для редактирования поста (только для автора).
 
     Attributes:
         template_name (str): Путь к шаблону формы.
     """
 
-    template_name = 'blog/create.html'
+    pass
 
 
-class PostDetailView(DetailView):
+class PostDetailView(PostDetailDeleteMixin, DetailView):
     """Представление для просмотра деталей поста.
 
     Attributes:
-        model (Type[Post]): Модель Post.
         template_name (str): Путь к шаблону страницы.
-        pk_url_kwarg (str): Имя параметра URL с ID поста.
     """
 
-    model = Post
     template_name = 'blog/detail.html'
-    pk_url_kwarg = 'post_id'
 
     def get_object(self, queryset: Optional[QuerySet[Post]] = None) -> Post:
         """Получает объект поста с проверкой прав доступа.
 
         Args:
-            queryset: Базовый QuerySet (не используется явно).
+            queryset: Базовый QuerySet.
 
         Returns:
             Post: Запрошенный пост.
 
         Raises:
-            Http404: Если пост не найден или недоступен текущему пользователю.
+            Http404: Если пост не найден.
         """
         post = get_object_or_404(Post, pk=self.kwargs['post_id'])
         if post.author == self.request.user:

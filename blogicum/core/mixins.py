@@ -1,5 +1,5 @@
-from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth import get_user_model
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import redirect
 from django.urls import reverse
 

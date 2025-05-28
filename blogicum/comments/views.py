@@ -1,8 +1,8 @@
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import CreateView, DeleteView, UpdateView
 
-from comments.mixins import (AuthorRequiredMixin, BaseCommentMixin,
-                             CommentFormMixin)
+from comments.mixins import BaseCommentMixin, CommentFormMixin
+from core.mixins import AuthorRequiredMixin
 
 
 class CommentCreateView(LoginRequiredMixin,
