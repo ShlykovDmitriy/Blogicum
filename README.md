@@ -34,7 +34,6 @@
 1. Клонировать репозиторий:
    ```bash
    git clone git@github.com:ShlykovDmitriy/django_sprint1.git
-   cd blogicum/
 2. Настроить виртуальное окружение:
 
    ```bash
@@ -48,6 +47,7 @@
 4. Настройка БД (SQLite по умолчанию):
 
    ```bash
+    cd blogicum/
     python manage.py makemigrations
     python manage.py migrate
 5. Создать суперпользователя:
