@@ -134,6 +134,9 @@ class Post(Title, IsPublishedAndCreatedAt):
         verbose_name_plural = 'Публикации'
         ordering = ('-pub_date',)
 
+    def __str__(self):
+        return f'{self.pk} - {self.title}'
+
     def get_absolute_url(self) -> str:
         """Генерирует URL для просмотра профиля автора публикации.
 
