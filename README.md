@@ -33,7 +33,7 @@
 
 1. Клонировать репозиторий:
    ```bash
-   git clone git@github.com:ShlykovDmitriy/django_sprint1.git
+   git clone git@github.com:ShlykovDmitriy/Blogicum.git
    cd blogicum/
 2. Настроить виртуальное окружение:
 
